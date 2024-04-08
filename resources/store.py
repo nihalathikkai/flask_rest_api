@@ -1,9 +1,10 @@
-import uuid
-
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from db import stores
+
+from db import db
+from models import StoreModel
 from schemas import StoreSchema
 
 
@@ -14,42 +15,39 @@ blp = Blueprint("stores", __name__, description="Operations on store")
 class StoreList(MethodView):
     @blp.response(200, schema=StoreSchema(many=True))
     def get(self):
-        return stores.values()
+        return StoreModel.query.all()
 
     @blp.arguments(schema=StoreSchema)
-    @blp.response(200, schema=StoreSchema)
+    @blp.response(201, schema=StoreSchema)
     def post(self, request_data):
-        for store in stores.values():
-            if request_data["name"] == store["name"]:
-                abort(400, message="Store already exists.")
+        store = StoreModel(**request_data)
 
-        while True:
-            store_id = uuid.uuid4().hex
-            if store_id not in stores:
-                break
+        try:
+            db.session.add(store)
+            db.session.commit()
+        except IntegrityError:
+            abort(409, message=f"Store '{store.name}' already exits.")
+        except SQLAlchemyError:
+            abort(500, message="An error occured while inserting the store.")
 
-        store_data = {
-            "id": store_id,
-            "name": request_data["name"],
-            # "items": [],
-        }
-        stores[store_id] = store_data
-
-        return store_data, 201
+        return store
 
 
 @blp.route("/store/<string:store_id>")
 class Store(MethodView):
     @blp.response(200, schema=StoreSchema)
     def get(self, store_id):
-        try:
-            return stores[store_id]
-        except KeyError:
-            abort(404, message="Store not found.")
+        store = StoreModel.query.get_or_404(store_id)
+        return store
 
     def delete(self, store_id):
+        store = StoreModel.query.get_or_404(store_id)
+
         try:
-            del stores[store_id]
-            return {"message": "Store deleted."}
-        except KeyError:
-            abort(404, message="Store not found.")
+            db.session.delete(store)
+            db.session.commit()
+        except SQLAlchemyError as e:
+            print(e)
+            abort(500, message="An error occured while deleting the store.")
+
+        return {"message": "Store deleted."}, 200
