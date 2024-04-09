@@ -3,7 +3,7 @@ from flask import Flask
 from flask_smorest import Api
 
 from resources.store import blp as StoreBlueprint
-from resources.items import blp as ItemBlueprint
+from resources.item import blp as ItemBlueprint
 
 
 app = Flask(__name__)
