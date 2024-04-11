@@ -2,7 +2,6 @@ from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-
 from db import db
 from models import StoreModel
 from schemas import StoreSchema
@@ -33,7 +32,7 @@ class StoreList(MethodView):
         return store
 
 
-@blp.route("/store/<string:store_id>")
+@blp.route("/store/<int:store_id>")
 class Store(MethodView):
     @blp.response(200, schema=StoreSchema)
     def get(self, store_id):

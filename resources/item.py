@@ -32,7 +32,7 @@ class ItemList(MethodView):
         return item
 
 
-@blp.route("/item/<string:item_id>")
+@blp.route("/item/<int:item_id>")
 class Item(MethodView):
     @blp.response(200, schema=ItemSchema)
     def get(self, item_id):

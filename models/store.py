@@ -15,6 +15,12 @@ class StoreModel(db.Model):
         lazy="dynamic",
         cascade="all, delete",
     )
+    tags = db.relationship(
+        "TagModel",
+        back_populates="store",
+        lazy="dynamic",
+        cascade="all, delete",
+    )
 
     # id = Column(Integer, primary_key=True)
     # name = Column(String(80), unique=True, nullable=False)
