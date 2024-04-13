@@ -1,4 +1,5 @@
 from flask.views import MethodView
+from flask_jwt_extended import jwt_required
 from flask_smorest import Blueprint, abort
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
@@ -12,11 +13,13 @@ blp = Blueprint("tags", __name__, description="Operations on tags")
 
 @blp.route("/store/<int:store_id>/tag")
 class TagsInStore(MethodView):
+    @jwt_required()
     @blp.response(200, schema=TagSchema(many=True))
     def get(self, store_id):
         store = StoreModel.query.get_or_404(store_id)
         return store.tags.all()
 
+    @jwt_required()
     @blp.arguments(schema=TagSchema)
     @blp.response(201, schema=TagSchema)
     def post(self, request_data, store_id):
@@ -35,6 +38,7 @@ class TagsInStore(MethodView):
 
 @blp.route("/item/<int:item_id>/tag/<int:tag_id>")
 class LinkTagsToItems(MethodView):
+    @jwt_required()
     @blp.response(201, schema=TagSchema)
     def post(self, item_id, tag_id):
         item = ItemModel.query.get_or_404(item_id)
@@ -55,6 +59,7 @@ class LinkTagsToItems(MethodView):
 
         return tag
 
+    @jwt_required(fresh=True)
     @blp.response(200, schema=TagsAndItemsSchema)
     def delete(self, item_id, tag_id):
         item = ItemModel.query.get_or_404(item_id, description="Item not found.")
